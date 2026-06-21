@@ -10,11 +10,13 @@ We develop high-performance engines, agent architectures, and developer tools th
 
 | Repository | Description |
 |------------|-------------|
-| [**qgre-engine-labs**](https://github.com/torad-labs/qgre-engine-labs) | High-performance inference engine with custom quantization |
-| [**grailseeker-xr**](https://github.com/torad-labs/grailseeker-xr) | Extended reality research and development |
-| [**qgre-agent**](https://github.com/torad-labs/qgre-agent) | Agent framework powered by QGRE |
-| [**aisdk-kotlin**](https://github.com/torad-labs/aisdk-kotlin) | Kotlin SDK for AI integrations |
-| [**agent-driven-architecture**](https://github.com/torad-labs/agent-driven-architecture) | Patterns and practices for building agent-driven systems |
+| [**aisdk-kotlin**](https://github.com/torad-labs/aisdk-kotlin) | Kotlin Multiplatform AI SDK — agent, tool, streaming, and UI-message primitives |
+| [**agent-driven-architecture**](https://github.com/torad-labs/agent-driven-architecture) | The Agent-Driven Architecture: an opinionated, platform-agnostic architecture for agent-first software |
+| [**qgre-engine**](https://github.com/torad-labs/qgre-engine) | QGRE Engine — Quality-Gated Reward Escalation for novel-domain GRPO training |
+| [**torad-code**](https://github.com/torad-labs/torad-code) | Open-source AI agent that brings Gemini directly into your terminal |
+| [**vllm**](https://github.com/torad-labs/vllm) | High-throughput and memory-efficient inference and serving engine for LLMs |
+| [**verl**](https://github.com/torad-labs/verl) | Volcano Engine Reinforcement Learning for LLMs |
+| [**open-webui**](https://github.com/torad-labs/open-webui) | User-friendly AI interface (supports Ollama, OpenAI API, and more) |
 
 ---
 

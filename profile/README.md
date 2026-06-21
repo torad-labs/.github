@@ -13,6 +13,8 @@ We develop high-performance engines, agent architectures, and developer tools th
 | [**aisdk-kotlin**](https://github.com/torad-labs/aisdk-kotlin) | Kotlin Multiplatform AI SDK — agent, tool, streaming, and UI-message primitives |
 | [**agent-driven-architecture**](https://github.com/torad-labs/agent-driven-architecture) | The Agent-Driven Architecture: an opinionated, platform-agnostic architecture for agent-first software |
 
+> 🔒 **Members:** See the [internal dashboard](https://github.com/torad-labs/internal) for the full project inventory.
+
 ---
 
 ## 🛠️ Tech Stack

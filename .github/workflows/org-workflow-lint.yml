@@ -1,0 +1,84 @@
+# ---
+# ORG-REQUIRED WORKFLOW — enforced by the `torad-standards` org ruleset.
+#
+# Lives in this PUBLIC repo so it can run on public and private repos alike;
+# a required workflow may only run on repos of the same or narrower visibility.
+# See org-secret-scan.yml for the full reasoning.
+#
+# Source of truth for the gate's content is
+# torad-labs/github-operator .github/workflows/reusable-workflow-lint.yml.
+# ---
+# zizmor catches credential leakage, template injection, excessive permissions
+# and cache poisoning; actionlint catches expression/type/shellcheck errors that
+# zizmor ignores. This pair earns its place: zizmor caught a live unsound
+# ternary in the operator's own poller where `cond && '' || '--flag'` always
+# yielded the false branch, so a dry run would have dispatched for real.
+#
+# Adopted org-wide 2026-07-30 after an audit found workflow static analysis in
+# only 5 of 24 repos.
+name: org-workflow-lint
+
+# Ruleset-required workflows are only ever triggered by pull_request and
+# merge_group. NOTE: no `paths:` filter — a required workflow that is skipped
+# by a path filter never reports its check, and the PR waits forever on a check
+# that will not arrive. Both jobs are short and exit immediately when a repo
+# has no workflows.
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: org-workflow-lint-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zizmor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: probe
+        run: |
+          if compgen -G '.github/workflows/*.y*ml' > /dev/null; then
+            echo "has-workflows=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No .github/workflows to analyse." >> "$GITHUB_STEP_SUMMARY"
+          fi
+        shell: bash
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        if: ${{ steps.probe.outputs.has-workflows == 'true' }}
+      - name: Run zizmor
+        if: ${{ steps.probe.outputs.has-workflows == 'true' }}
+        env:
+          ZIZMOR_VERSION: '1.28.0'
+        run: uvx "zizmor@${ZIZMOR_VERSION}" --format github .
+
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: probe
+        run: |
+          if compgen -G '.github/workflows/*.y*ml' > /dev/null; then
+            echo "has-workflows=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No .github/workflows to analyse." >> "$GITHUB_STEP_SUMMARY"
+          fi
+        shell: bash
+      - uses: reviewdog/action-actionlint@50842263c20a7c46bd0065b9e624d3c569db061e # v1.73.0
+        if: ${{ steps.probe.outputs.has-workflows == 'true' }}
+        with:
+          reporter: local
+          fail_level: error
+          # reviewdog computes findings against a diff by default and a shallow
+          # PR checkout has no base — "diff command is empty" red. nofilter =
+          # lint the whole workflow surface every run, which is the point.
+          filter_mode: nofilter

@@ -1,0 +1,83 @@
+# ---
+# ORG-REQUIRED WORKFLOW — enforced by the `torad-standards` org ruleset.
+#
+# Lives in this PUBLIC repo so it can run on public and private repos alike;
+# a required workflow may only run on repos of the same or narrower visibility.
+# See org-secret-scan.yml for the full reasoning.
+# ---
+# Conventional-commit PR titles.
+#
+# This is not style policing: the agent review's automatic trigger reads the PR
+# title and only fires on feat/fix. A 2026-07-30 audit found title checking in
+# just 3 of 24 repos, which meant review coverage was accidental — a PR titled
+# "Fix login" (no colon) silently got no review while "fix: login" did.
+#
+# It also keeps squash-merge history readable, since every repo in the fleet
+# squashes.
+#
+# Deliberately permissive about WHICH type is used — the gate is that a type is
+# declared at all. `feat`/`fix` additionally opt a PR into automatic review.
+name: org-pr-title
+
+# Ruleset-required workflows only ever fire on pull_request / merge_group.
+# `edited` is included so retitling a PR re-runs the check and clears a
+# previously failing run without needing a new commit.
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: org-pr-title-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the title declares a conventional type
+        env:
+          # Untrusted input: only ever pattern-matched, never interpolated into
+          # a shell command.
+          TITLE: ${{ github.event.pull_request.title }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          # merge_group has no PR title to check; the check already passed on the
+          # PR itself. Report success so the required check is satisfied.
+          if [ "$EVENT" = "merge_group" ]; then
+            echo "merge_group: title already validated on the pull request."
+            exit 0
+          fi
+
+          TYPES='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          # type(optional-scope)!: subject   — the Conventional Commits shape.
+          if printf '%s' "$TITLE" | grep -qE "^(${TYPES})(\([^)]+\))?!?: .+"; then
+            type="$(printf '%s' "$TITLE" | sed -E 's/^([a-z]+).*/\1/')"
+            echo "OK — type '${type}'."
+            if printf '%s' "$TITLE" | grep -qE "^(feat|fix)(\([^)]+\))?!?: "; then
+              echo "This PR also qualifies for automatic agent review." >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "PR title: **valid** (\`${type}\`)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "::error::PR title must start with a conventional type. Got: ${TITLE}"
+          {
+            echo "### PR title needs a conventional type"
+            echo
+            echo '```'
+            echo "${TITLE}"
+            echo '```'
+            echo
+            echo "Expected \`type: subject\`, optionally \`type(scope)!: subject\`."
+            echo
+            echo "Types: \`${TYPES//|/\`, \`}\`"
+            echo
+            echo "\`feat:\` and \`fix:\` additionally trigger an automatic agent review."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1

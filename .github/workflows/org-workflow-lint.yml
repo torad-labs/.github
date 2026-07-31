@@ -52,11 +52,29 @@ jobs:
         shell: bash
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         if: ${{ steps.probe.outputs.has-workflows == 'true' }}
-      - name: Run zizmor
+      # Two passes on purpose. Bare `zizmor` exits non-zero on ANY finding, down
+      # to Informational — which made this gate fail a repo whose worst finding
+      # was "consider a longer Dependabot cooldown". A gate that blocks on
+      # advisory notices trains people to ignore it, so:
+      #
+      #   report  — every finding as a PR annotation, never fails
+      #   gate    — High severity only, and that is the pass/fail
+      #
+      # Calibrated against the fleet: gateward's real cache-poisoning finding is
+      # High and still fails here; torad's 4 Medium + 1 Low + 2 Informational
+      # correctly do not.
+      - name: Report all findings (advisory)
         if: ${{ steps.probe.outputs.has-workflows == 'true' }}
+        continue-on-error: true
         env:
           ZIZMOR_VERSION: '1.28.0'
         run: uvx "zizmor@${ZIZMOR_VERSION}" --format github .
+
+      - name: Fail on high-severity findings
+        if: ${{ steps.probe.outputs.has-workflows == 'true' }}
+        env:
+          ZIZMOR_VERSION: '1.28.0'
+        run: uvx "zizmor@${ZIZMOR_VERSION}" --min-severity high --format plain .
 
   actionlint:
     runs-on: ubuntu-latest

@@ -52,6 +52,12 @@ jobs:
         shell: bash
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         if: ${{ steps.probe.outputs.has-workflows == 'true' }}
+      # Scope is .github/ — NOT the repo root. GitHub only ever executes
+      # workflows from .github/workflows/ at the top level, but `zizmor .`
+      # recurses into vendored trees: qgre-engine-labs carries the cudarc crate
+      # with its own .github/workflows, and the gate was failing on upstream's
+      # files, which never run here and cannot be fixed without conflicting on
+      # every vendor update.
       # Two passes on purpose. Bare `zizmor` exits non-zero on ANY finding, down
       # to Informational — which made this gate fail a repo whose worst finding
       # was "consider a longer Dependabot cooldown". A gate that blocks on
@@ -68,13 +74,13 @@ jobs:
         continue-on-error: true
         env:
           ZIZMOR_VERSION: '1.28.0'
-        run: uvx "zizmor@${ZIZMOR_VERSION}" --format github .
+        run: uvx "zizmor@${ZIZMOR_VERSION}" --format github .github/
 
       - name: Fail on high-severity findings
         if: ${{ steps.probe.outputs.has-workflows == 'true' }}
         env:
           ZIZMOR_VERSION: '1.28.0'
-        run: uvx "zizmor@${ZIZMOR_VERSION}" --min-severity high --format plain .
+        run: uvx "zizmor@${ZIZMOR_VERSION}" --min-severity high --format plain .github/
 
   actionlint:
     runs-on: ubuntu-latest

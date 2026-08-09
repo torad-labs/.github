@@ -1,0 +1,4 @@
+# Minimal config so org-secret-scan can load --config on this repo.
+# No allowlist entries needed; defaults apply via extend.
+[extend]
+useDefault = true

@@ -50,7 +50,7 @@ jobs:
             echo "No .github/workflows to analyse." >> "$GITHUB_STEP_SUMMARY"
           fi
         shell: bash
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         if: ${{ steps.probe.outputs.has-workflows == 'true' }}
       # Scope is .github/ — NOT the repo root. GitHub only ever executes
       # workflows from .github/workflows/ at the top level, but `zizmor .`
@@ -97,7 +97,7 @@ jobs:
             echo "No .github/workflows to analyse." >> "$GITHUB_STEP_SUMMARY"
           fi
         shell: bash
-      - uses: reviewdog/action-actionlint@d63ba7532e0942965320cd8d73cbae4c7b3c5283 # v1.73.1
+      - uses: reviewdog/action-actionlint@dbe5299849118fd6f099ba563d263d770955a64a # v1.73.2
         if: ${{ steps.probe.outputs.has-workflows == 'true' }}
         with:
           reporter: local

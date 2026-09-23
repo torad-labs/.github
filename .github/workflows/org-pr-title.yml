@@ -19,9 +19,13 @@
 # declared at all. `feat`/`fix` additionally opt a PR into automatic review.
 name: org-pr-title
 
-# Ruleset-required workflows only ever fire on pull_request / merge_group.
-# `edited` is included so retitling a PR re-runs the check and clears a
-# previously failing run without needing a new commit.
+# Ruleset-required workflows only ever fire on pull_request / merge_group, and a
+# ruleset IGNORES `types`: it fires only on opened, synchronize and reopened
+# (GitHub docs, "Troubleshooting rules" → "Supported ruleset workflow events").
+# So retitling a PR in a fleet repo does NOT re-run this check, and "Re-run"
+# replays the old title from the original event. Close and reopen the PR, or
+# push. `edited` still applies to this repo's own PRs, where the workflow runs
+# as an ordinary one. (Found on torad-labs/hostshield#102, 2026-09-22.)
 on:
   pull_request:
     types: [opened, reopened, edited, synchronize]
@@ -79,5 +83,8 @@ jobs:
             echo "Types: \`${TYPES//|/\`, \`}\`"
             echo
             echo "\`feat:\` and \`fix:\` additionally trigger an automatic agent review."
+            echo
+            echo "After retitling, close and reopen the PR (or push): a ruleset-required"
+            echo "check ignores \`edited\`, and \"Re-run\" replays the old title."
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1

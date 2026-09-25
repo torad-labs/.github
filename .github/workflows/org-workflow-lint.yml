@@ -36,7 +36,9 @@ concurrency:
 
 jobs:
   zizmor:
-    runs-on: ubuntu-latest
+    # ubuntu-slim: 1 vCPU, 5 GB, no Docker, a 15-minute cap. This job needs none of
+    # what it lacks, and bills a third of ubuntu-latest's rate.
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -83,6 +85,7 @@ jobs:
         run: uvx "zizmor@${ZIZMOR_VERSION}" --min-severity high --format plain .github/
 
   actionlint:
+    # Not ubuntu-slim: this job uses a Docker action (reviewdog/action-actionlint), and slim has no Docker daemon.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

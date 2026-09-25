@@ -40,7 +40,9 @@ concurrency:
 
 jobs:
   title:
-    runs-on: ubuntu-latest
+    # ubuntu-slim: 1 vCPU, 5 GB, no Docker, a 15-minute cap. This job needs none of
+    # what it lacks, and bills a third of ubuntu-latest's rate.
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     steps:
       - name: Check the title declares a conventional type
